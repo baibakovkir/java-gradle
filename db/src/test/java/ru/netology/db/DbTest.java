@@ -1,7 +1,11 @@
 package ru.netology.db;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class DbTest {
     @Test
@@ -13,8 +17,8 @@ public class DbTest {
         Db db = new Db(dbSetting);
 
         // then:
-        Assertions.assertEquals("first", db.getMyEntity().getName());
-        Assertions.assertNotNull(db.getMyEntity().getId());
+        assertThat(db.getMyEntity().getName(), equalTo("first"));
+        assertThat(db.getMyEntity().getId(), notNullValue());
     }
 
     @Test
@@ -26,7 +30,7 @@ public class DbTest {
         Db db = new Db(dbSetting);
 
         // then:
-        Assertions.assertSame(dbSetting, db.getDbSetting());
+        assertThat(db.getDbSetting(), sameInstance(dbSetting));
     }
 
     @Test
@@ -39,6 +43,43 @@ public class DbTest {
         db.setMyEntity(replacement);
 
         // then:
-        Assertions.assertSame(replacement, db.getMyEntity());
+        assertThat(db.getMyEntity(), sameInstance(replacement));
+    }
+
+    @Test
+    void setMyEntity_preservesEntityData() {
+        // given:
+        Db db = new Db(new DbSetting("name5", "password5"));
+        MyEntity myEntity = new MyEntity("name6");
+        UUID id = UUID.randomUUID();
+        myEntity.setId(id);
+
+        // when:
+        db.setMyEntity(myEntity);
+
+        // then:
+        assertThat(db.getMyEntity(), allOf(
+                hasProperty("name", equalTo("name6")),
+                hasProperty("id", equalTo(id))
+        ));
+    }
+
+    @Test
+    void toString_containsEntityData() {
+        // given:
+        MyEntity myEntity = new MyEntity("name8");
+        UUID id = UUID.randomUUID();
+        myEntity.setId(id);
+
+        // when:
+        String entityString = myEntity.toString();
+
+        // then:
+        assertThat(entityString, allOf(
+                startsWith("MyEntity{"),
+                containsString("id=" + id),
+                containsString("name='name8'"),
+                endsWith("}")
+        ));
     }
 }
